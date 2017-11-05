@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hello</title>
+    <script>
+        function callAjax(url){
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+    </script>
+</head>
+
+<body>
+hello!
+<form>
+    <button onclick="callAjax(/start/)" value="Send Email">Start</button>
+    <button onclick="callAjax(/stop/)" value="stop Email">Stop</button>
+</form>
+
+</body>
+</html>
