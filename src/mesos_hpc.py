@@ -2,6 +2,9 @@ from mesoshttp.client import MesosClient
 import sys
 import threading
 
+def fprint(str):
+    print("HPC:" + str)
+
 class HpcFramework(object):
     class MesosFramework(threading.Thread):
 
@@ -14,14 +17,14 @@ class HpcFramework(object):
             try:
                 self.client.register()
             except KeyboardInterrupt:
-                print('Stop requested by user, stopping framework....')
+                fprint('Stop requested by user, stopping framework....')
 
-
+    running = False
     def __init__(self):
-        print("init")
+        fprint("init")
 
     def start(self):
-        print("start")
+        fprint("start")
         self.driver = None
         self.client = MesosClient(mesos_urls=['http://127.0.0.1:5050'])
         self.client.on(MesosClient.SUBSCRIBED, self.subscribed)
@@ -32,38 +35,47 @@ class HpcFramework(object):
         self.th.start()
         while self.th.isAlive():
             try:
+                self.running = True
                 self.th.join(1)
             except Exception as e:
-                print("mesos framework exception" +str(e))
-        print("mesos framework stopped")
+                fprint("mesos framework exception" +str(e))
+        self.running = False
+        fprint("mesos framework stopped")
 
     def shutdown(self):
-        print("shutdown")
+        fprint("shutdown")
         self.driver.tearDown()
         self.client.stop = True
         self.stop = True
 
     def subscribed(self, driver):
-        print("subscribed")
+        fprint("subscribed")
         self.driver = driver
 
     def status_update(self, update):
-        print("status_update {}".format(update['status']['state']))
+        fprint("status_update {}".format(update['status']['state']))
 
     def offer_received(self, offers):
-        print("offer_received" + (str(offers)))
+        fprint("offer_received" + (str(offers)))
         for offer in offers:
             offer.decline()
 
     def run_job(self, mesos_offer):
-        print("run_job")
+        fprint("run_job")
 
 test_mesos = HpcFramework()
 
-def mesos_hpc():
-    print ("where are the nuclear wessels?")
-    threading.Thread(target=test_mesos.start).start()
-    return 'goodbye World!'
+
+def mesos_hpc_start():
+    if(not test_mesos.running):
+        threading.Thread(target=test_mesos.start).start()
+    else:
+        fprint("framework already started")
 
 def mesos_hpc_stop():
-    test_mesos.shutdown()
+    if (test_mesos.running):
+        test_mesos.shutdown()
+    else:
+        fprint("framework not running")
+
+
