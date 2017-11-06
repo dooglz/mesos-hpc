@@ -2,23 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>hello</title>
+    <title>HPC Mesos Framework</title>
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous">
+    </script>
     <script>
-        function callAjax(url){
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();
+        $.fn.scrollBottom = function() {var sh =$(this)[0].scrollHeight; return (($(this).scrollTop() == sh) ? $(this) : $(this).scrollTop(sh));};
+        function callAjax(urlo){
+         $.ajax({url: urlo});
         }
+        function ping(){
+            $.getJSON( "/messages",
+                function( data ) {
+                    var olditems = $("#logbox1").val();
+                    var items = "";
+                    $.each( data, function( key, val ) {items+=(val+"\n--\n");});
+                    if(olditems != items){$("#logbox1").val(items).scrollBottom();}
+                }
+            );
+        }
+
+
+
     </script>
 </head>
-
 <body>
-hello!
-<form>
-    <button onclick="callAjax(/start/)" value="">Start</button>
-    <button onclick="callAjax(/stop/)" value="">Stop</button>
-    <button onclick="callAjax(/quit/)" value="">quit</button>
-</form>
+
+<h1>HPC Mesos Framework</h1>
+{% if version %}
+<h4>Version:#{{version}}
+    {% if startTime %}
+    - Process Started: {{startTime}}
+    {% endif %}
+    <h4>
+        {% endif %}
+
+
+        <hr>
+        <h2>Framework Control</h2>
+        <form>
+            <button type='button' onclick="callAjax(/start/)" type='button' value="">Start</button>
+            <button type='button' onclick="callAjax(/stop/)" value="">Stop</button>
+            <button type='button' onclick="callAjax(/quit/)" value="">quit</button>
+        </form>
+        <textarea id="logbox1" rows="10" cols="120" readonly>
+Log file pending
+</textarea>
+
+        <hr>
+        <h2>Job Info</h2>
+
+
+        <script>
+    window.setInterval(ping, 2000);
+
+        </script>
 
 </body>
 </html>
