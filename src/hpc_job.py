@@ -1,3 +1,4 @@
+import copy
 
 mesos_hpc_jobtemplate = {
     'name': '',
@@ -19,11 +20,11 @@ mesos_hpc_jobtemplate = {
 }
 
 def mesos_hpc_buildJob(name, command, cpus, ram, task_id, agent_id):
-    job = mesos_hpc_jobtemplate.copy()
-    job['name'] = name
-    job['task_id']['value'] = task_id
-    job['agent_id']['value'] = agent_id
-    job['command']['value'] = command
-    job['resources'][0]['scalar']['value'] = cpus
-    job['resources'][1]['scalar']['value'] = ram
+    job = copy.deepcopy(mesos_hpc_jobtemplate)
+    job['name'] = copy.copy(name)
+    job['task_id']['value'] = copy.copy(task_id)
+    job['agent_id']['value'] = copy.copy(agent_id)
+    job['command']['value'] = copy.copy(command)
+    job['resources'][0]['scalar']['value'] = copy.copy(cpus)
+    job['resources'][1]['scalar']['value'] = copy.copy(ram)
     return job

@@ -5,8 +5,11 @@ import uuid
 import sys
 import threading
 
-MESOS_MASTER = 'http://146.176.164.62:5050'
+# MESOS_MASTER = 'http://146.176.164.62:5050'
+MESOS_MASTER = 'http://127.0.0.1:5050'
+jc = 1
 
+pending_jobs = []
 
 class HpcFramework(object):
     messages = []
@@ -67,19 +70,40 @@ class HpcFramework(object):
 
     def status_update(self, update):
         stat = update['status']
-        self.fprint("status_update " + stat['task_id']['value'][:4] + " " + str(stat['state']))# + " " + str(stat.get('message', {})))
+        state = stat['state']
+        job = next(x for x in self.scheduled if x['task_id']['value'] == stat['task_id']['value'])
+
+        self.fprint("status_update " + stat['task_id']['value'][:4] + " " + str(
+            stat['state']))  # + " " + str(stat.get('message', {})))
+        if state == "TASK_STARTING":
+            pass
+        elif state == "TASK_RUNNING":
+            pass
+        elif state == "TASK_FINISHED":
+            self.scheduled.remove(job)
+            pending_jobs.append(job)
+        elif state == "TASK_FAILED":
+            pass
+        elif state == "TASK_KILLED":
+            pass
+        elif state == "TASK_ERROR":
+            pass
+        elif state == "TASK_DROPPED":
+            pass
+        elif state == "TASK_UNREACHABLE":
+            pass
+        else:
+            self.fprint("unkown task state" + state)
 
     def compatible_offer(self, job, offer):
         of = offer.get_offer()
         for reqres in job['resources']:
             if reqres['type'] == "SCALAR":
-                for avres in of['resources']:
-                    if avres['name'] == reqres['name']:
-                        if reqres['scalar']['value'] > avres['scalar']['value']:
-                            self.fprint(reqres['name'] + ": " + str(reqres['scalar']['value'])
-                                        + "incompatible with offer " + str(
-                                avres['scalar']['value']))
-                            return False
+                for avres in (x for x in of['resources'] if x['name'] == reqres['name']):
+                    if reqres['scalar']['value'] > avres['scalar']['value']:
+                        self.fprint(reqres['name'] + ": " + str(reqres['scalar']['value'])
+                                    + "incompatible with offer " + str(avres['scalar']['value']))
+                        return False
             elif reqres['type'] == "RANGES":
                 self.fprint("TODO: Check ranges requirements")
             else:
@@ -108,7 +132,6 @@ class HpcFramework(object):
 
 test_mesos = HpcFramework()
 
-
 def mesos_hpc_start():
     if (not test_mesos.running):
         threading.Thread(target=test_mesos.start).start()
@@ -128,13 +151,15 @@ def mesos_hpc_messages():
 
 
 def mesos_hpc_build_job():
-    task_id = uuid.uuid4().hex
-    job = mesos_hpc_buildJob("cooljob", "echo hello world from:" + task_id[:4], 0.1, 10, task_id, 0)
+    global jc
+    task_id = str(uuid.uuid4().hex)
+    job = mesos_hpc_buildJob("cooljob"+str(jc), "echo hello world from:" + task_id[:4], 0.1, 10, task_id, 0)
     pending_jobs.append(job)
+    jc+=1
     return job;
 
 
-pending_jobs = []
+
 
 
 def mesos_schedule_job(job=None):

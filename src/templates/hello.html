@@ -8,57 +8,120 @@
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+            integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous">
+    </script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+            integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous">
+    </script>
     <script>
-        $.fn.scrollBottom = function() {var sh =$(this)[0].scrollHeight; return (($(this).scrollTop() == sh) ? $(this) : $(this).scrollTop(sh));};
-        function callAjax(urlo){
-         $.ajax({url: urlo});
+        $.fn.scrollBottom = function () {
+            var sh = $(this)[0].scrollHeight;
+            return (($(this).scrollTop() == sh) ? $(this) : $(this).scrollTop(sh));
+        };
+
+        function callAjax(urlo) {
+            $.ajax({url: urlo});
+            setTimeout(ping, 100);
         }
-        function ping(){
-            $.getJSON( "/messages",
-                function( data ) {
+
+        var jobs = {};
+
+        function ping() {
+            $.getJSON("/messages",
+                function (data) {
                     var olditems = $("#logbox1").val();
                     var items = "";
-                    $.each( data, function( key, val ) {items+=(val+"\n--\n");});
-                    if(olditems != items){$("#logbox1").val(items).scrollBottom();}
+                    $.each(data, function (key, val) {
+                        items += (val + "\n--\n");
+                    });
+                    if (olditems != items) {
+                        $("#logbox1").val(items).scrollBottom();
+                    }
+                }
+            );
+            $.getJSON("/jobs",
+                function (data) {
+                    jobs = data;
+                    var j1 = "", j2 = "", j3 = "";
+                    data.pending.forEach(function (j) {
+                        j1 += j.task_id.value.slice(0, 4);
+                        j1 += " - " + j.name +"\n";
+                    });
+                    data.scheduling.forEach(function (j) {
+                        j2 += j.task_id.value.slice(0, 4);
+                        j2 += " - " + j.name+"\n";
+                    });
+                    data.scheduled.forEach(function (j) {
+                        j3 += j.task_id.value.slice(0, 4);
+                        j3 += " - " + j.name+"\n";
+                    });
+                    $("#jobbox1").val(j1).scrollBottom();
+                    $("#jobbox2").val(j2).scrollBottom();
+                    $("#jobbox3").val(j3).scrollBottom();
                 }
             );
         }
-
-
-
     </script>
+
 </head>
 <body>
 
-<h1>HPC Mesos Framework</h1>
-{% if version %}
-<h4>Version:#{{version}}
-    {% if startTime %}
-    - Process Started: {{startTime}}
+<div class="container-fluid">
+    <h1>HPC Mesos Framework</h1>
+    {% if version %}
+        <h4>Version:#{{ version }}
+            {% if startTime %}
+                - Process Started: {{ startTime }}
+            {% endif %}
+        </h4>
     {% endif %}
-    <h4>
-        {% endif %}
 
 
-        <hr>
-        <h2>Framework Control</h2>
-        <form>
-            <button type='button' onclick="callAjax(/start/)" type='button' value="">Start</button>
-            <button type='button' onclick="callAjax(/stop/)" value="">Stop</button>
-            <button type='button' onclick="callAjax(/quit/)" value="">quit</button>
-        </form>
-        <textarea id="logbox1" rows="10" cols="120" readonly>
-Log file pending
-</textarea>
+    <hr>
+    <h2>Framework Control</h2>
+    <form>
+        <button type='button' onclick="callAjax(/start/)" value="">Start</button>
+        <button type='button' onclick="callAjax(/stop/)" value="">Stop</button>
+        <button type='button' onclick="callAjax(/quit/)" value="">quit</button>
+    </form>
+    <textarea id="logbox1" rows="10" cols="120" class="form-control" readonly>
+        Log file pending
+    </textarea>
+    <hr>
 
-        <hr>
-        <h2>Job Info</h2>
-
-
-        <script>
+    <h2>Job Info</h2>
+    <form>
+        <button type='button' onclick="callAjax('/build')" type='button' value="">Build</button>
+        <button type='button' onclick="callAjax('/schedule')" value="">Schedule</button>
+        <div class="row">
+            <div class="col-sm-4">
+                Jobs
+                <textarea id="jobbox1" rows="10" class="form-control" readonly>
+                waiting for data
+                </textarea>
+            </div>
+            <div class="col-sm-4">
+                Scheduling jobs
+                <textarea id="jobbox2" rows="10" class="form-control" readonly>
+                  waiting for data
+                </textarea>
+            </div>
+            <div class="col-sm-4">
+                Running jobs
+                <textarea id="jobbox3" rows="10" class="form-control" readonly>
+                 waiting for data
+                </textarea>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
     window.setInterval(ping, 2000);
 
-        </script>
+</script>
 
 </body>
 </html>

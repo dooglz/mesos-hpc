@@ -13,5 +13,6 @@ RUN service zookeeper stop && \
     echo manual | tee /etc/init/zookeeper.override && \
     apt -y remove --purge zookeeper
 
+EXPOSE 5051
 CMD ["--work_dir=/var/lib/mesos/slave", "--master=zk://mesos_master:2181/mesos", "--no-systemd_enable_support"]
 ENTRYPOINT ["mesos-slave"]
